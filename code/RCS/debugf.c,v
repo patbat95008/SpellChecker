@@ -1,0 +1,184 @@
+head	1.5;
+access;
+symbols;
+locks;
+comment	@ * @;
+
+
+1.5
+date	2014.03.06.03.24.07;	author -;	state -;
+branches;
+next	1.4;
+
+1.4
+date	2013.06.07.20.41.07;	author -;	state -;
+branches;
+next	1.3;
+
+1.3
+date	2012.11.21.02.25.15;	author -;	state -;
+branches;
+next	1.2;
+
+1.2
+date	2012.11.21.02.22.12;	author -;	state -;
+branches;
+next	1.1;
+
+1.1
+date	2012.11.17.02.05.22;	author -;	state -;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.5
+log
+@-
+@
+text
+@// $Id: debugf.c,v 1.4 2013-06-07 13:41:07-07 - - $
+
+#include <errno.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "debugf.h"
+
+char *Exec_Name = NULL;
+int Exit_Status = EXIT_SUCCESS;
+
+static const char *debugflags = "";
+static bool alldebugflags = false;
+
+void __stubprintf (const char *filename, int line, const char *func,
+                   const char *format, ...) {
+   va_list args;
+   fflush (NULL);
+   fprintf (stdout, "%s: STUB (%s:%d) %s:\n",
+            Exec_Name, filename, line, func);
+   va_start (args, format);
+   vfprintf (stdout, format, args);
+   va_end (args);
+   fflush (NULL);
+}
+
+void set_debugflags (const char *flags) {
+   debugflags = flags;
+   if (strchr (debugflags, '@@') != NULL) alldebugflags = true;
+   DEBUGF ('a', "Debugflags = \"%s\"\n", debugflags);
+}
+
+void __debugprintf (char flag, const char *file, int line,
+                    const char *func, const char *format, ...) {
+   va_list args;
+   if (alldebugflags || strchr (debugflags, flag) != NULL) {
+      fflush (NULL);
+      fprintf (stderr, "%s: DEBUGF(%c) %s (%s:%d):\n",
+               Exec_Name, flag, func, file, line);
+      va_start (args, format);
+      vfprintf (stderr, format, args);
+      va_end (args);
+      fflush (NULL);
+   }
+}
+
+@
+
+
+1.4
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: debugf.c,v 1.3 2012-11-20 18:25:15-08 - - $
+d16 1
+a16 1
+static char *debugflags = "";
+d19 2
+a20 2
+void __stubprintf (char *filename, int line, const char *func,
+                   char *format, ...) {
+d31 1
+a31 1
+void set_debugflags (char *flags) {
+d37 2
+a38 2
+void __debugprintf (char flag, char *file, int line, const char *func,
+                    char *format, ...) {
+@
+
+
+1.3
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: debugf.c,v 1.2 2012-11-20 18:22:12-08 - - $
+d37 1
+a37 1
+void __debugprintf (char flag, char *file, int line,
+d42 2
+a43 2
+      fprintf (stderr, "%s: DEBUGF(%c) (%s:%d):\n",
+               Exec_Name, flag, file, line);
+@
+
+
+1.2
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: debugf.c,v 1.6 2012-11-14 19:11:05-08 - - $
+d23 1
+a23 1
+   fprintf (stdout, "%s: STUB: %s[%d] %s:\n",
+d42 1
+a42 1
+      fprintf (stderr, "%s: DEBUGF(%c): %s[%d]:\n",
+@
+
+
+1.1
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: debugf.c,v 1.4 2012-02-22 19:50:19-08 - - $
+d13 3
+a17 9
+static char *execname = NULL;
+
+void set_execname (char *name) {
+   execname = name;
+}
+
+void print_execname (FILE *out) {
+   if (execname != NULL) fprintf (out, "%s: ", execname);
+}
+d23 2
+a24 2
+   print_execname (stdout);
+   fprintf (stdout, "STUB: %s[%d] %s:\n", filename, line, func);
+d42 2
+a43 3
+      print_execname (stderr);
+      fprintf (stderr, "DEBUGF(%c): %s[%d]:\n",
+                flag, file, line);
+@

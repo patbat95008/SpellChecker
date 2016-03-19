@@ -1,0 +1,85 @@
+head	1.2;
+access;
+symbols;
+locks;
+comment	@ * @;
+
+
+1.2
+date	2013.05.22.02.58.24;	author -;	state -;
+branches;
+next	1.1;
+
+1.1
+date	2012.11.17.02.05.22;	author -;	state -;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@-
+@
+text
+@// $Id: yyextern.h,v 1.1 2012-11-16 18:05:22-08 - - $
+
+#ifndef __YYEXTERN_H__
+#define __YYEXTERN_H__
+
+//
+// DESCRIPTION
+//    Definitions of external names used by flex-generated code.
+//
+
+#include <stdio.h>
+
+extern FILE *yyin;        // File currently being read
+
+extern char *yytext;      // Pointer to the string that was found
+
+extern int yy_flex_debug; // yylex's verbose tracing flag
+
+extern int yylex (void);  // Read next word from opened file yyin
+
+extern int yylineno;      // Line number within the current file
+
+extern int yylex_destroy (void);
+                          // Cleans up flex's buffers when done
+                          // Avoids valgrind memory leak report.
+
+#endif
+
+@
+
+
+1.1
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: yyextern.h,v 1.1 2012-02-21 20:36:10-08 - - $
+d13 1
+a13 1
+extern FILE *yyin;            // File currently being read
+d15 1
+a15 1
+extern char *yytext;          // Pointer to the string that was found
+d17 1
+a17 1
+extern int yy_flex_debug;     // yylex's verbose tracing flag
+d19 1
+a19 1
+extern int yylex (void);      // Read next word from opened file yyin
+d21 1
+a21 1
+extern int yylineno;          // Line number within the current file
+d23 3
+a25 1
+extern void yycleanup (void); // Cleans up flex's buffers when done
+@

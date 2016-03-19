@@ -1,0 +1,19 @@
+Name: Patrick Russell
+
+USERNAME: pcrussel
+
+Assignment: asg5 spellchecker
+
+Files submitted: README
+                 Makefile
+                 debugf.h
+                 hashset.h
+                 strhash.h
+                 yyextern.h
+                 debugf.c
+                 hashset.c
+                 spellchk.c
+                 strhash.c
+                 scanner.l
+
+Date: 3/11/14

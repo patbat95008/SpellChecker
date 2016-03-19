@@ -1,0 +1,160 @@
+head	1.6;
+access;
+symbols;
+locks;
+comment	@ * @;
+
+
+1.6
+date	2014.03.06.03.24.07;	author -;	state -;
+branches;
+next	1.5;
+
+1.5
+date	2014.02.22.01.49.36;	author -;	state -;
+branches;
+next	1.4;
+
+1.4
+date	2013.08.12.20.28.04;	author -;	state -;
+branches;
+next	1.3;
+
+1.3
+date	2013.05.22.02.58.47;	author -;	state -;
+branches;
+next	1.2;
+
+1.2
+date	2013.05.22.02.58.24;	author -;	state -;
+branches;
+next	1.1;
+
+1.1
+date	2012.11.17.02.05.22;	author -;	state -;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.6
+log
+@-
+@
+text
+@// $Id: strhash.c,v 1.5 2014-02-21 17:49:36-08 - - $
+
+#include <assert.h>
+#include <stdio.h>
+#include <sys/types.h>
+
+#include "strhash.h"
+
+size_t strhash (const char *string) {
+   assert (string != NULL);
+   size_t hash = 0;
+   for (; *string != '\0'; ++string) {
+      hash = *string + (hash << 6) + (hash << 16) - hash;
+   }
+   return hash;
+}
+
+@
+
+
+1.5
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: strhash.c,v 1.4 2013-08-12 13:28:04-07 - - $
+d9 1
+a9 1
+size_t strhash (char *string) {
+@
+
+
+1.4
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: strhash.c,v 1.3 2013-05-21 19:58:47-07 - - $
+a8 15
+//
+// DESCRIPTION
+//    Uses Horner's method to compute the hash code of a string
+//    as is done by java.lang.String.hashCode:
+//    .  s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]
+//    Using strength reduction, the multiplication is replaced by
+//    a shift.  However, instead of returning a signed number,
+//    this function returns an unsigned number.
+//
+// REFERENCE
+//    http://java.sun.com/j2se/1.4.1/docs/api/java/lang/
+//    String.html#hashCode()
+// 
+
+
+d11 5
+a15 3
+   size_t hashcode = 0;
+   while (*string) hashcode = hashcode * 31 + *string++;
+   return hashcode;
+@
+
+
+1.3
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: strhash.c,v 1.2 2013-05-21 19:58:24-07 - - $
+d9 16
+a24 1
+hashcode_t strhash (char *string) {
+d26 2
+a27 4
+   hashcode_t hashcode = 0;
+   for (; *string != '\0'; ++string) {
+      hashcode = hashcode * 31 + *string;
+   }
+@
+
+
+1.2
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: strhash.c,v 1.1 2012-11-16 18:05:22-08 - - $
+d13 1
+a13 1
+      hashcode = hashcode * 31 + string[index];
+@
+
+
+1.1
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: strhash.c,v 1.1 2012-02-21 20:36:10-08 - - $
+d12 2
+a13 2
+   for (int index = 0; string[index] != '\0'; ++index) {
+      hashcode = hashcode * 31 + (unsigned char) string[index];
+@

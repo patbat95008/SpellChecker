@@ -1,0 +1,68 @@
+head	1.2;
+access;
+symbols;
+locks;
+comment	@// @;
+
+
+1.2
+date	2013.08.07.19.17.38;	author -;	state -;
+branches;
+next	1.1;
+
+1.1
+date	2013.08.07.19.17.22;	author -;	state -;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.2
+log
+@-
+@
+text
+@// $Id: hash++.cpp,v 1.1 2013-08-07 12:17:22-07 - - $
+
+//
+// This program is not part of your project.  It exists just to 
+// illustrate how to obtain and print hash values.  Each element
+// of argv is hashed and printed along with its hashcode.
+//
+
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+int main (int argc, char **argv) {
+   size_t const width = 15;
+   for (int argi = 0; argi < argc; ++argi) {
+      string str = argv[argi];
+      size_t hash_value = hash<string> (str);
+      cout << setw(width) << hash_value << " = hash(\"" << str
+           << ")" << endl;
+   }
+   size_t const max = numeric_limits<size_t>::max;
+   cout << setw(width) << max << " = 0x" << hex << max << endl;
+   return EXIT_SUCCESS;
+}
+
+@
+
+
+1.1
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashfn.cpp,v 1.1 2013-08-07 12:16:15-07 - - $
+d10 1
+@

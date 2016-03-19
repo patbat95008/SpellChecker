@@ -1,0 +1,444 @@
+head	1.9;
+access;
+symbols;
+locks;
+comment	@ * @;
+
+
+1.9
+date	2014.03.13.18.55.33;	author -;	state -;
+branches;
+next	1.8;
+
+1.8
+date	2014.03.06.03.24.07;	author -;	state -;
+branches;
+next	1.7;
+
+1.7
+date	2013.05.23.22.41.07;	author -;	state -;
+branches;
+next	1.6;
+
+1.6
+date	2013.05.22.03.15.58;	author -;	state -;
+branches;
+next	1.5;
+
+1.5
+date	2013.05.22.03.15.13;	author -;	state -;
+branches;
+next	1.4;
+
+1.4
+date	2013.03.18.18.43.24;	author -;	state -;
+branches;
+next	1.3;
+
+1.3
+date	2013.03.05.04.49.14;	author -;	state -;
+branches;
+next	1.2;
+
+1.2
+date	2012.11.28.02.50.54;	author -;	state -;
+branches;
+next	1.1;
+
+1.1
+date	2012.11.17.02.05.22;	author -;	state -;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.9
+log
+@-
+@
+text
+@// Patrick Russell pcrussel
+// $Id: hashset.c,v 1.8 2014-03-05 19:24:07-08 - - $
+
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "debugf.h"
+#include "hashset.h"
+#include "strhash.h"
+
+#define HASH_NEW_SIZE 15
+
+typedef struct hashnode hashnode;
+struct hashnode {
+   char *word;
+   hashnode *link;
+};
+
+struct hashset {
+   size_t size;
+   size_t load;
+   hashnode **chains;
+};
+
+void check_hashset(hashset *this, int debug){
+   unsigned int j_index = 0;
+   size_t index = 0;
+   int cluster[this->size/4];
+   for(index = 0; index < this->size/4; index++) {
+      cluster[index] = NULL;
+   }
+   int cluster_count = 0;
+   for(index = 0; index < this->size; index++){
+      if((this->chains[index]->word) != NULL && 
+         (this->chains[index]->word == NULL)){
+         ++cluster[cluster_count];
+         cluster_count = 0;
+      }
+      if((this->chains[index]->word == NULL) && 
+         (this->chains[0]->word == NULL)){
+         int first_clu_count = 0;
+         size_t k_index = 0;
+         for(k_index = 0; k_index < this->size; k_index++){
+            if(this->chains[k_index]->word != NULL){
+              ++first_clu_count;
+            }else{
+              --cluster[first_clu_count];
+              ++cluster[first_clu_count + cluster_count];
+            }
+         }
+      }else if(this->chains[index]->word != NULL){
+         j_index++;
+         ++cluster_count;
+      }else{
+         ++cluster[cluster_count];
+         cluster_count = 0;
+      }
+   }
+
+   printf("%10d words in hash\n", j_index);
+   printf("%10zu length of the array\n", this->size);
+   int sum = 0;
+   for(index = 1; index < this->size/4; index++){
+      if(cluster[index] != 0){
+         printf("%10d clusters of size %u\n", cluster[index], index);
+         sum += (cluster[index] * index);
+      }
+   }
+
+   if(debug > 1){
+     for(index = 0; index < this->size; index++){
+        if(this->chains[index] != NULL){
+           char *word = this->chains[index]->word;
+           printf("chains[%10u]->word = \"%s\"\n", index, word);
+        }
+     }
+  }
+}
+
+//doubles the array and reorders the hashtable according 
+//to the new size
+void doublearray(hashset *this){
+   size_t index = 0;
+   size_t oldsize = this->size;
+   //double the hashset->size
+   this->size = (oldsize * 2) + 1;
+   //make a new array, and initialize it to null
+   hashnode **new_chains = malloc (this->size * sizeof(hashnode));
+   for (index = 0; index < this->size; index++){ 
+      new_chains[index] = NULL;
+   }
+   //set the new array to the values of the old,
+   //divided by the new size
+   for (index = 0; index < oldsize ; index++){
+      if(this->chains[index] == NULL) continue; 
+      hashnode *tmp = this->chains[index];
+      if(tmp == NULL){
+         break;
+      }
+      size_t new_index = strhash(tmp->word) % this->size;
+      while (new_chains[new_index] != NULL){
+         hashnode *new_tmp = new_chains[new_index];
+         if (strcmp(new_tmp->word, 
+                    tmp->word) == 0){
+            break;
+         }
+         new_index = (new_index + 1) % this->size;
+      }
+      new_chains[new_index] = this->chains[index];
+   }
+   //make the swap, free the old array
+   hashnode **j_tmp = this->chains;
+   this->chains = new_chains;
+   free(j_tmp);
+}
+
+hashset *new_hashset (void) {
+   hashset *this = malloc (sizeof (struct hashset));
+   assert (this != NULL);
+   this->size = HASH_NEW_SIZE;
+   this->load = 0;
+   size_t sizeof_chains = this->size * sizeof (hashnode *);
+   this->chains = malloc (sizeof_chains);
+   assert (this->chains != NULL);
+   memset (this->chains, 0, sizeof_chains);
+   DEBUGF ('h', "%p -> struct hashset {size = %d, chains=%p}\n",
+                this, this->size, this->chains);
+   return this;
+}
+
+//frees the hashset
+void free_hashset (hashset *this) {
+   DEBUGF ('h', "free (%p)\n", this);
+   int index = 0;
+   //free all the strings in the array
+   for (index = 0; index < (int)this->size; index++){
+      free(this->chains[index]);
+   }
+   //free the array
+   memset(this->chains, 0, this->size * sizeof(char*));
+   free(this->chains);
+   //free the hashset
+   memset(this, 0, sizeof(struct hashset));
+   free(this);
+}
+
+//places words into the hashset
+void put_hashset (hashset *this, const char *item) {
+   //if the array's load is too big, double it
+   if((this->load * 4) > this->size){
+      doublearray(this);
+   }
+   //find where the input word is in the hash table
+   size_t index = (strhash(item) % this->size);
+   //move down the table until an empty spot is found
+   while (this->chains[index] != NULL){
+      hashnode *compare = this->chains[index];
+      if (strcmp (compare->word, item) == 0){
+         break;
+      }
+      index = (index + 1) % this->size;
+   }
+   //set the empty spot to the input, increase the size of the 
+   //hashset
+   hashnode *tmp = malloc(sizeof(hashnode));
+   tmp->word = strdup(item);
+   this->chains[index] = tmp;
+   this->load++;
+}
+
+//checks to see if the word is in the hash
+bool has_hashset (hashset *this, const char *item) {
+   int index = (strhash(item) % this->size);   
+   while (this->chains[index] != NULL){
+      if(strcmp(this->chains[index]->word, item) == 0) return true;
+      index = (index + 1) % this->size;
+   }
+   //converts to to all lower case, then checks again
+   char *lower = item;
+   for(index = 0; item[index] != NULL; index++){
+      lower[index] = (tolower(item[index]));
+   }
+
+   index = (strhash(lower) % this->size);
+   while(this->chains[index] != NULL){
+      if(strcmp(this->chains[index]->word, lower) == 0){
+         return true;
+      }
+      index = (index+1) % this->size;
+   }
+   return false;
+}
+
+@
+
+
+1.8
+log
+@-
+@
+text
+@d1 2
+a2 1
+// $Id: hashset.c,v 1.7 2013-05-23 15:41:07-07 - - $
+d8 1
+d28 92
+d134 1
+d137 11
+d150 1
+d152 20
+a171 1
+   STUBPRINTF ("hashset=%p, item=%s\n", this, item);
+d174 1
+d176 19
+a194 2
+   STUBPRINTF ("hashset=%p, item=%s\n", this, item);
+   return true;
+@
+
+
+1.7
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.6 2013-05-21 20:15:58-07 - - $
+d44 1
+a44 1
+void put_hashset (hashset *this, char *item) {
+d48 1
+a48 1
+bool has_hashset (hashset *this, char *item) {
+@
+
+
+1.6
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.5 2013-05-21 20:15:13-07 - - $
+d21 1
+a21 1
+   size_t length;
+d29 1
+a29 1
+   this->length = HASH_NEW_SIZE;
+d31 1
+a31 1
+   size_t sizeof_chains = this->length * sizeof (hashnode *);
+d35 2
+a36 2
+   DEBUGF ('h', "%p -> struct hashset {length = %d, chains=%p}\n",
+                this, this->length, this->chains);
+@
+
+
+1.5
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.4 2013-03-18 11:43:24-07 - - $
+d23 1
+a23 1
+   hashnode **array;
+d31 6
+a36 6
+   size_t sizeof_array = this->length * sizeof (hashnode *);
+   this->array = malloc (sizeof_array);
+   assert (this->array != NULL);
+   memset (this->array, 0, sizeof_array);
+   DEBUGF ('h', "%p -> struct hashset {length = %d, array=%p}\n",
+                this, this->length, this->array);
+@
+
+
+1.4
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.3 2013-03-04 20:49:14-08 - - $
+d14 6
+d23 1
+a23 1
+   char **array;
+d27 8
+a34 9
+   hashset *new = malloc (sizeof (struct hashset));
+   assert (new != NULL);
+   new->length = HASH_NEW_SIZE;
+   new->load = 0;
+   new->array = malloc (new->length * sizeof (char*));
+   assert (new->array != NULL);
+   for (size_t index = 0; index < new->length; ++index) {
+      new->array[index] = NULL;
+   }
+d36 2
+a37 2
+                new, new->length, new->array);
+   return new;
+d40 2
+a41 6
+void free_hashset (hashset *hashset) {
+   DEBUGF ('h', "free (%p), free (%p)\n", hashset->array, hashset);
+   memset (hashset->array, 0, hashset->length * sizeof (char*));
+   free (hashset->array);
+   memset (hashset, 0, sizeof (struct hashset));
+   free (hashset);
+d44 2
+a45 2
+void put_hashset (hashset *hashset, char *item) {
+   STUBPRINTF ("hashset=%p, item=%s\n", hashset, item);
+d48 2
+a49 2
+bool has_hashset (hashset *hashset, char *item) {
+   STUBPRINTF ("hashset=%p, item=%s\n", hashset, item);
+@
+
+
+1.3
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.2 2012-11-27 18:50:54-08 - - $
+d16 1
+a16 1
+   int load;
+@
+
+
+1.2
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.1 2012-11-16 18:05:22-08 - - $
+d20 2
+a21 2
+hashset_ref new_hashset (void) {
+   hashset_ref new = malloc (sizeof (struct hashset));
+d35 1
+a35 1
+void free_hashset (hashset_ref hashset) {
+d43 1
+a43 1
+void put_hashset (hashset_ref hashset, char *item) {
+d47 1
+a47 1
+bool has_hashset (hashset_ref hashset, char *item) {
+@
+
+
+1.1
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: hashset.c,v 1.1 2012-02-21 20:36:10-08 - - $
+d26 1
+a29 1
+   assert (new->array != NULL);
+@
